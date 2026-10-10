@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RVC in the browser</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main>
+  <header>
+    <h1>RVC <span>in the browser</span></h1>
+    <p>Retrieval-based Voice Conversion, running entirely on your device. Nothing is uploaded.</p>
+  </header>
+
+  <section class="card" id="models">
+    <h2>1 · Models</h2>
+    <div class="grid2">
+      <label class="drop">HuBERT <small>pytorch_model.bin / model.safetensors (built in the browser) or a pre-exported hubert_v2.onnx</small>
+        <input type="file" id="f-hubert" accept=".onnx,.bin,.safetensors,.pt"></label>
+      <label class="drop">HuBERT config <small>optional config.json (default = hubert-base)</small>
+        <input type="file" id="f-hcfg" accept=".json"></label>
+      <label class="drop">Pitch model <small>rmvpe.pt (built in the browser) or rmvpe.onnx — optional, YIN works without it</small>
+        <input type="file" id="f-rmvpe" accept=".onnx,.pt"></label>
+      <label class="drop">Voice <small>your RVC <code>.pth</code> (converted in the browser)</small>
+        <input type="file" id="f-voice" accept=".pth,.pt"></label>
+      <label class="drop">Index <small>optional faiss <code>.index</code> (pick it first or after)</small>
+        <input type="file" id="f-index" accept=".index"></label>
+    </div>
+    <div class="row">
+      <label>Runtime
+        <select id="ep"><option value="wasm">WASM (CPU) — most compatible</option><option value="webgpu">WebGPU for HuBERT (experimental)</option></select></label>
+      <span id="loaded" class="chips"></span>
+    </div>
+    <details><summary>Cached models</summary><div id="cached" class="chips"></div></details>
+  </section>
+
+  <section class="card">
+    <h2>2 · Input audio</h2>
+    <input type="file" id="f-audio" accept="audio/*,video/*">
+    <audio id="in-player" controls hidden></audio>
+  </section>
+
+  <section class="card">
+    <h2>3 · Settings</h2>
+    <div class="grid3">
+      <label>Transpose (semitones) <output id="o-key">0</output><input type="range" id="key" min="-24" max="24" step="1" value="0"></label>
+      <label>Pitch extractor
+        <select id="f0m"><option value="rmvpe">RMVPE (best)</option><option value="yin">YIN (no model)</option></select></label>
+      <label>Speaker ID <input type="number" id="sid" min="0" value="0"></label>
+      <label>Index rate <output id="o-idx">0.75</output><input type="range" id="idx" min="0" max="1" step="0.05" value="0.75"></label>
+      <label>Protect voiceless <output id="o-prot">0.33</output><input type="range" id="prot" min="0" max="0.5" step="0.01" value="0.33"></label>
+      <label>Volume envelope mix <output id="o-rms">0.25</output><input type="range" id="rms" min="0" max="1" step="0.05" value="0.25"></label>
+      <label>Output sample rate <select id="rsr"><option value="0">Model native</option><option value="44100">44.1 kHz</option><option value="48000">48 kHz</option></select></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>4 · Convert</h2>
+    <button id="go" disabled>Convert</button>
+    <progress id="bar" value="0" max="1" hidden></progress>
+    <pre id="log" aria-live="polite"></pre>
+    <audio id="out-player" controls hidden></audio>
+    <a id="dl" class="btn" hidden download="rvc-output.wav">Download WAV</a>
+  </section>
+  <section class="card">
+    <h2>5 · Realtime <small>(use headphones)</small></h2>
+    <label>Context <input type="range" id="rt-ctx" min="0.3" max="1.5" step="0.1" value="0.8"></label> <button id="rt">Start realtime</button> <span id="rt-stat"></span>
+    <p><small>Uses the settings above. Needs a voice + matching HuBERT loaded. If "processing" is slower than "block", it keeps up by using bigger blocks (more delay). RMVPE is heavy — try YIN for lower delay.</small></p>
+  </section>
+</main>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
